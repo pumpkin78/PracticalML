@@ -1,0 +1,78 @@
+---
+title: "Prediction Assignment Writeup"
+author: "Binh Nguyen, May 24th, 2015"
+---
+
+# Executive Summary
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. 
+
+In this assignment, we build a prediction model based on the dataset GroupWare ( http://groupware.les.inf.puc-rio.br/har) and evalute the model with a test set.
+
+
+# Data preparation
+
+Firstly, we load both training and test datasets from the CSV files. Some data points have the value of "#DIV/0!" need to be clean up by converting to NA value.
+```{r}
+library(ggplot2)
+library(caret)
+library(gbm)
+rTrain = read.csv("./pml-training.csv", na.strings=c("NA", "#DIV/0!"))
+rTest  = read.csv("./pml-testing.csv", na.strings=c("NA", "#DIV/0!"))
+```
+
+
+Since the columns 1-7 are not relevant to the measurement, they are removed in the processed training and testing datasets:
+
+```{r}
+pTrain = rTrain[, c(8:ncol(rTrain))]
+pTest = rTest[, c(8:ncol(rTest))]
+```
+
+We also remove any columns that have "NA" value 
+
+```{r}
+pTrain <- pTrain[, colSums(is.na(pTrain)) == 0] 
+pTest  <- pTest[, colSums(is.na(pTest)) == 0] 
+
+```
+
+# Prediction Model
+
+The original train dataset now is splitted into 2 parts: 70% for the training set and 30% for the test set
+
+```{r}
+inTrain = createDataPartition(pTrain$classe, p=0.7, list = FALSE)
+training = pTrain[inTrain,]
+testing  = pTrain[-inTrain,]
+```
+
+Now we do one more cleaning up step by converting all values except the outcome column "classe" to numeric values
+
+```{r}
+for(i in c(1: {ncol(training)-1})){ training[,i] = as.numeric(as.character(training[,i]))}
+for(i in c(1: {ncol(testing)-1})){ testing[,i] = as.numeric(as.character(testing[,i]))}
+```
+
+
+The gbm (Gradient Boosted Model) is selected to build our prediction model.
+
+```{r}
+modFit = train(classe ~ ., method = "gbm", data = training)
+print(modFit)
+predictTesting <- predict(modFit, testing)
+confusionMatrix(testing$classe, predictTesting)
+```
+
+The accuracy of this model based on the test set is 
+
+
+# Prediction Result
+Using this model to predict the input test set:
+```{r}
+predictResult = predict(modFit, pTest[, -length(names(pTest))])
+predictResult
+```
+
+
+
