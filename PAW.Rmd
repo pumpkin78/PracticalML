@@ -58,13 +58,13 @@ for(i in c(1: {ncol(testing)-1})){ testing[,i] = as.numeric(as.character(testing
 The gbm (Gradient Boosted Model) is selected to build our prediction model.
 
 ```{r}
-modFit = train(classe ~ ., method = "gbm", data = training)
+modFit = train(classe ~ ., method = "gbm", data = training, verbose = FALSE)
 print(modFit)
 predictTesting <- predict(modFit, testing)
 confusionMatrix(testing$classe, predictTesting)
 ```
 
-The accuracy of this model based on the test set is 
+The accuracy of this model based on the test set is about 70%.
 
 
 # Prediction Result
@@ -73,6 +73,8 @@ Using this model to predict the input test set:
 predictResult = predict(modFit, pTest[, -length(names(pTest))])
 predictResult
 ```
+
+
 
 
 
